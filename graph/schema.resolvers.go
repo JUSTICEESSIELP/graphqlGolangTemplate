@@ -8,16 +8,89 @@ import (
 	"context"
 	"example/graph/model"
 	"fmt"
+	"strconv"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// CreateJobListing is the resolver for the createJobListing field.
+func (r *mutationResolver) CreateJobListing(ctx context.Context, input model.CreateJobListingInput) (*model.JobListing, error) {
+	newJobListing := &model.JobListing{
+		ID:          fmt.Sprint(len(r.AllJobsListed) + 1),
+		Title:       input.Title,
+		Company:     input.Company,
+		URL:         input.URL,
+		Description: input.Description,
+	}
+
+	r.AllJobsListed = append(r.AllJobsListed, newJobListing)
+	return newJobListing, nil
+
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// UpdateJobListing is the resolver for the updateJobListing field.
+func (r *mutationResolver) UpdateJobListing(ctx context.Context, id string, input model.UpdateJobListingInput) (*model.JobListing, error) {
+	idInInt, err := strconv.Atoi(id)
+	if err != nil {
+		panic(err)
+	}
+	foundRecord := r.AllJobsListed[idInInt]
+	if input.Description != nil {
+		foundRecord.Description = *input.Description
+	}
+	if input.Title != nil {
+		foundRecord.Title = *input.Title
+	}
+	if input.URL != nil {
+		foundRecord.URL = *input.URL
+	}
+
+	return foundRecord, nil
+}
+
+// DeleteJobListing is the resolver for the deleteJobListing field.
+func (r *mutationResolver) DeleteJobListing(ctx context.Context, id string) (*model.DeleteJobResponse, error) {
+	idInInt, err := strconv.Atoi(id)
+	if err != nil {
+		panic(err)
+	}
+	foundRecord := r.AllJobsListed[idInInt]
+
+	r.AllJobsListed = append(r.AllJobsListed[:idInInt], r.AllJobsListed[idInInt+1:]...)
+
+	return &model.DeleteJobResponse{
+		foundRecord.ID,
+	}, nil
+
+}
+
+// Jobs is the resolver for the jobs field.
+func (r *queryResolver) Jobs(ctx context.Context) ([]*model.JobListing, error) {
+	// allJobs := []*model.JobListing{
+	// 	{
+	// 		ID:          "124",
+	// 		Title:       "Software Engineer",
+	// 		Description: "10 years of experience",
+	// 		Company:     "Google",
+	// 		URL:         "www.google.com",
+	// 	},
+	// 	{
+	// 		ID:          "34",
+	// 		Title:       "Software Engineer",
+	// 		Description: "10 years of experience",
+	// 		Company:     "Google",
+	// 		URL:         "www.google.com",
+	// 	},
+	// }
+
+	return r.AllJobsListed, nil
+}
+
+// Job is the resolver for the job field.
+func (r *queryResolver) Job(ctx context.Context, id string) (*model.JobListing, error) {
+	idInInt, err := strconv.Atoi(id)
+	if err != nil {
+		panic(err)
+	}
+	return r.AllJobsListed[idInInt], nil
 }
 
 // Mutation returns MutationResolver implementation.
@@ -28,3 +101,10 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.

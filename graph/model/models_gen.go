@@ -11,6 +11,8 @@ type CreateJobListingInput struct {
 
 type DeleteJobResponse struct {
 	DeletedJobID string `json:"deletedJobId"`
+	Jobdeleted JobListing `json:"jobdeleted"`
+
 }
 
 type JobListing struct {

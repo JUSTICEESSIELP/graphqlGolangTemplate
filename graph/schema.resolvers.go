@@ -58,6 +58,7 @@ func (r *mutationResolver) DeleteJobListing(ctx context.Context, id string) (*mo
 
 	return &model.DeleteJobResponse{
 		foundRecord.ID,
+		*r.AllJobsListed[idInInt],
 	}, nil
 
 }
